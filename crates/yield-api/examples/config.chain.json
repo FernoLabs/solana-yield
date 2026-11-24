@@ -1,0 +1,28 @@
+{
+  "listen": "127.0.0.1:8080",
+  "database": "./data/yields.sqlite",
+  "interval_seconds": 60,
+  "max_age_seconds": 180,
+  "allow_api_sources": false,
+  "rpc_url_env": "YIELD_RPC_URL",
+  "genesis_hash": "5eykt4UsFv8P8NJdTREpY1vzqKqZKvdpKuc147dw2N9d",
+  "sources": [
+    {
+      "adapter": "kamino",
+      "id": "kamino-usdg",
+      "reserve": "ESCkPWKHmgNE7Msf77n9yzqJd5kQVWWGy3o5Mgxhvavp",
+      "mint": "2u1tszSeqZ3qBWF3uNGPFc8TzMk2tdiwknnRMWGWjGWH",
+      "asset": "USDG",
+      "decimals": 6
+    },
+    {
+      "adapter": "jupiter",
+      "id": "jupiter-usdg",
+      "reserve": "G4KAenCBfybnZLtVe4LdNrmEtQoW3x93oTowFJUPSvx6",
+      "rate_model": "6iHHKAK9Mqjn57CVmWe4szAPyTH8s8pniXSj6vWaKW5r",
+      "mint": "2u1tszSeqZ3qBWF3uNGPFc8TzMk2tdiwknnRMWGWjGWH",
+      "asset": "USDG",
+      "decimals": 6
+    }
+  ]
+}

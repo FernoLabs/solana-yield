@@ -1,0 +1,7 @@
+{
+  "url": "https://stream.blockzilla.dev",
+  "key_file": "/path/to/private/blockzilla.key",
+  "source_file": "/path/to/verified/source.json",
+  "database": "./data/stream.sqlite",
+  "sample_frame": null
+}

@@ -1,0 +1,13 @@
+[package]
+publish = ["crates-io"]
+name = "blockzilla-log-parser"
+version = "0.2.0"
+edition = "2024"
+rust-version = "1.98"
+license = "MIT"
+repository = "https://github.com/FernoLabs/blockzilla"
+description = "Borrowed parser for Solana runtime log lines"
+readme = "README.md"
+
+[lints.rust]
+unexpected_cfgs = "deny"

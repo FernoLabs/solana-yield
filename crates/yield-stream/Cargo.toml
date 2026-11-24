@@ -1,0 +1,26 @@
+[package]
+name = "yield-stream"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Local protocol event parsing from the Blockzilla bank stream"
+
+
+[dependencies]
+anyhow = "1.0.104"
+blockzilla-bank-client = { path = "../../vendor/blockzilla/crates/blockzilla-bank-client" }
+blockzilla-bank-stream-v2 = { path = "../../vendor/blockzilla/crates/blockzilla-bank-stream-v2" }
+blockzilla-decoder = { path = "../blockzilla-decoder" }
+bs58 = "0.5.1"
+rusqlite = { version = "0.40.2", features = ["bundled"] }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.151"
+solana-transaction-status-client-types = { version = "=4.2.2", features = ["agave-unstable-api"] }
+tokio = { version = "1.53.1", features = ["macros", "rt-multi-thread", "time", "signal"] }
+yield-indexer = { path = "../yield-api" }
+yield-parser = { path = "../yield-parser", default-features = false, features = ["ledger"] }
+
+[dev-dependencies]
+blockzilla-bank-stream-v2 = { path = "../../vendor/blockzilla/crates/blockzilla-bank-stream-v2", features = ["test-fixtures"] }
+blockzilla-decoder = { path = "../blockzilla-decoder", features = ["test-fixtures"] }
+base64 = "0.23.1"

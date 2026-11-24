@@ -1,0 +1,29 @@
+[package]
+name = "blockzilla-registry"
+version = "0.2.0"
+edition = "2024"
+rust-version = "1.98"
+license = "MIT"
+repository = "https://github.com/FernoLabs/blockzilla"
+publish = ["crates-io"]
+autobins = false
+description = "Pubkey registry, MPHF key index and blockhash registry"
+
+[features]
+default = ["native-registry"]
+native-registry = ["dep:gxhash", "dep:ph"]
+portable-registry = []
+
+[dependencies]
+blockzilla-primitives = { path = "../../blockzilla-primitives", version = "0.2.0" }
+anyhow = "1.0.104"
+five8 = "1.0.0"
+memmap2 = "0.9.11"
+solana-pubkey = "4.2.1"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+gxhash = { version = "3.5.0", optional = true }
+ph = { version = "=0.11.0", default-features = false, optional = true }
+
+[lints.rust]
+unexpected_cfgs = "deny"

@@ -1,0 +1,23 @@
+[package]
+name = "yield-parser"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Offline parsers for Solana yield account layouts"
+
+
+[features]
+default = ["cli"]
+cli = ["ledger"]
+ledger = ["dep:base64", "dep:serde", "dep:serde_json"]
+
+[[bin]]
+name = "yield-parser"
+path = "src/main.rs"
+required-features = ["cli"]
+
+[dependencies]
+bs58 = "0.5.1"
+base64 = { version = "0.23.1", optional = true }
+serde = { version = "1.0.229", features = ["derive"], optional = true }
+serde_json = { version = "1.0.151", optional = true }

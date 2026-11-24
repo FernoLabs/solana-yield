@@ -1,0 +1,74 @@
+[
+  {
+    "id": "project-0:2s37akK2eyBbp8DZgCm7RtsaEz8eJP3Nxd4urLHQv7yB",
+    "kind": "project0",
+    "accounts": {
+      "bank": "2s37akK2eyBbp8DZgCm7RtsaEz8eJP3Nxd4urLHQv7yB",
+      "group": "4qp6Fx6tnZkY5Wropq9wUYgtFxXKwE6viZxFHg3rdAG8",
+      "asset_mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+    }
+  },
+  {
+    "id": "project-0:HmpMfL8942u22htC4EMiWgLX931g3sacXFR6KjuLgKLV",
+    "kind": "project0",
+    "accounts": {
+      "bank": "HmpMfL8942u22htC4EMiWgLX931g3sacXFR6KjuLgKLV",
+      "group": "4qp6Fx6tnZkY5Wropq9wUYgtFxXKwE6viZxFHg3rdAG8",
+      "asset_mint": "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB"
+    }
+  },
+  {
+    "id": "project-0:8UEiPmgZHXXEDrqLS3oiTxQxTbeYTtPbeMBxAd2XGbpu",
+    "kind": "project0",
+    "accounts": {
+      "bank": "8UEiPmgZHXXEDrqLS3oiTxQxTbeYTtPbeMBxAd2XGbpu",
+      "group": "4qp6Fx6tnZkY5Wropq9wUYgtFxXKwE6viZxFHg3rdAG8",
+      "asset_mint": "2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GXo"
+    }
+  },
+  {
+    "id": "project-0:F4brCRJHx8epWah7p8Ace4ehutphxYZ1ctRq2LS3iiBh",
+    "kind": "project0",
+    "accounts": {
+      "bank": "F4brCRJHx8epWah7p8Ace4ehutphxYZ1ctRq2LS3iiBh",
+      "group": "4qp6Fx6tnZkY5Wropq9wUYgtFxXKwE6viZxFHg3rdAG8",
+      "asset_mint": "CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH"
+    }
+  },
+  {
+    "id": "project-0:3xn7strvpinirQ5KxEgVFemb6qYeHG39krohoeRHRrRt",
+    "kind": "project0",
+    "accounts": {
+      "bank": "3xn7strvpinirQ5KxEgVFemb6qYeHG39krohoeRHRrRt",
+      "group": "4qp6Fx6tnZkY5Wropq9wUYgtFxXKwE6viZxFHg3rdAG8",
+      "asset_mint": "JuprjznTrTSp2UFa3ZBUFgwdAmtZCq4MQCwysN55USD"
+    }
+  },
+  {
+    "id": "project-0:FDsf8sj6SoV313qrA91yms3u5b3P4hBxEPvanVs8LtJV",
+    "kind": "project0",
+    "accounts": {
+      "bank": "FDsf8sj6SoV313qrA91yms3u5b3P4hBxEPvanVs8LtJV",
+      "group": "4qp6Fx6tnZkY5Wropq9wUYgtFxXKwE6viZxFHg3rdAG8",
+      "asset_mint": "USDSwr9ApdHk5bvJKMjzff41FfuX8bSxdKcR81vTwcA"
+    }
+  },
+  {
+    "id": "project-0:5syijTAMBBmdjwUgYYBvvv26zTS6YX1bYV9EdXkgYqLa",
+    "kind": "project0",
+    "accounts": {
+      "bank": "5syijTAMBBmdjwUgYYBvvv26zTS6YX1bYV9EdXkgYqLa",
+      "group": "4qp6Fx6tnZkY5Wropq9wUYgtFxXKwE6viZxFHg3rdAG8",
+      "asset_mint": "5YMkXAYccHSGnHn9nob9xEvv6Pvka9DZWH7nTbotTu9E"
+    }
+  },
+  {
+    "id": "project-0:Dj2CwMF3GM7mMT5hcyGXKuYSQ2kQ5zaVCkA1zX1qaTva",
+    "kind": "project0",
+    "accounts": {
+      "bank": "Dj2CwMF3GM7mMT5hcyGXKuYSQ2kQ5zaVCkA1zX1qaTva",
+      "group": "4qp6Fx6tnZkY5Wropq9wUYgtFxXKwE6viZxFHg3rdAG8",
+      "asset_mint": "2u1tszSeqZ3qBWF3uNGPFc8TzMk2tdiwknnRMWGWjGWH"
+    }
+  }
+]

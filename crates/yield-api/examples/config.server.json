@@ -1,0 +1,10 @@
+{
+  "listen": "127.0.0.1:8080",
+  "database": "./data/yields.sqlite",
+  "interval_seconds": 60,
+  "max_age_seconds": 5,
+  "allow_api_sources": false,
+  "rpc_url_env": null,
+  "genesis_hash": "5eykt4UsFv8P8NJdTREpY1vzqKqZKvdpKuc147dw2N9d",
+  "sources": []
+}

@@ -1,0 +1,536 @@
+{
+  "schema_version": 1,
+  "protocols": [
+    {
+      "id": "kamino",
+      "name": "Kamino",
+      "parser_status": "implemented",
+      "ledger_support": [
+        "Reserve exchange-rate getter return"
+      ],
+      "account_support": [
+        "Stored net reserve assets per collateral share"
+      ],
+      "live_verification": "fixture_only",
+      "required_inputs": [
+        "Extend account collection to the monitored reserves.",
+        "Add Earn vault holdings, fees, and supply before valuing vault shares."
+      ]
+    },
+    {
+      "id": "jupiter",
+      "name": "Jupiter",
+      "parser_status": "implemented",
+      "ledger_support": [
+        "Earn exchange-price events with proved market binding",
+        "Liquidity exchange-price events and operation prices"
+      ],
+      "account_support": [
+        "Stored Earn asset units per share"
+      ],
+      "live_verification": "historical_ledger",
+      "required_inputs": [
+        "Add all required reserve and rate-model accounts for each selected market.",
+        "Keep borrowing cost separate from supplier return."
+      ]
+    },
+    {
+      "id": "save",
+      "name": "Save",
+      "parser_status": "implemented",
+      "ledger_support": [],
+      "account_support": [
+        "Stored net reserve assets per collateral share; 11 configured products"
+      ],
+      "live_verification": "synthetic_only",
+      "required_inputs": [
+        "Supply verified reserve accounts and the Clock from one Bank."
+      ]
+    },
+    {
+      "id": "project-0",
+      "name": "Project 0",
+      "parser_status": "implemented",
+      "ledger_support": [],
+      "account_support": [
+        "Stored bank asset share value; 8 configured products"
+      ],
+      "live_verification": "synthetic_only",
+      "required_inputs": [
+        "Supply verified bank accounts and the Clock from one Bank.",
+        "Wrapped bank positions require additional layouts."
+      ]
+    },
+    {
+      "id": "loopscale",
+      "name": "Loopscale",
+      "parser_status": "planned",
+      "ledger_support": [],
+      "account_support": [],
+      "live_verification": "not_verified",
+      "required_inputs": [
+        "Read loan terms, repayments, vault shares, fees, and idle liquidity positions. Identify each underlying strategy in the valuation."
+      ]
+    },
+    {
+      "id": "exponent",
+      "name": "Exponent",
+      "parser_status": "planned",
+      "ledger_support": [],
+      "account_support": [],
+      "live_verification": "not_verified",
+      "required_inputs": [
+        "Read principal token quote, redemption value, and maturity for yield to maturity. Tranches, managed vaults, and liquidity positions each need their own accounts and underlying valuation."
+      ]
+    },
+    {
+      "id": "elemental",
+      "name": "Elemental",
+      "parser_status": "implemented",
+      "ledger_support": [],
+      "account_support": [
+        "Posted simple annual rate; 8 configured products"
+      ],
+      "live_verification": "synthetic_only",
+      "required_inputs": [
+        "Supply verified fixed-deposit pool accounts and the Clock from one Bank.",
+        "Track actual distributions separately."
+      ]
+    },
+    {
+      "id": "orca",
+      "name": "Orca",
+      "parser_status": "planned",
+      "ledger_support": [],
+      "account_support": [],
+      "live_verification": "not_verified",
+      "required_inputs": [
+        "Read pool fee growth, relevant positions and ranges, reward state, and prices for both assets. Pool fee growth alone describes only one part of position return."
+      ]
+    },
+    {
+      "id": "raydium",
+      "name": "Raydium",
+      "parser_status": "planned",
+      "ledger_support": [],
+      "account_support": [],
+      "live_verification": "not_verified",
+      "required_inputs": [
+        "Read pool fee growth, relevant positions and ranges, reward state, and prices for both assets. Pool fee growth alone describes only one part of position return."
+      ]
+    },
+    {
+      "id": "pancakeswap",
+      "name": "PancakeSwap",
+      "parser_status": "planned",
+      "ledger_support": [],
+      "account_support": [],
+      "live_verification": "not_verified",
+      "required_inputs": [
+        "Read pool fee growth, relevant positions and ranges, reward state, and prices for both assets. Pool fee growth alone describes only one part of position return."
+      ]
+    },
+    {
+      "id": "byreal",
+      "name": "Byreal",
+      "parser_status": "planned",
+      "ledger_support": [],
+      "account_support": [],
+      "live_verification": "not_verified",
+      "required_inputs": [
+        "Read pool fee growth, relevant positions and ranges, reward state, and prices for both assets. Pool fee growth alone describes only one part of position return."
+      ]
+    },
+    {
+      "id": "meteora",
+      "name": "Meteora",
+      "parser_status": "implemented",
+      "ledger_support": [],
+      "account_support": [
+        "Dynamic Vault unlocked USDT per LP share; 1 configured product"
+      ],
+      "live_verification": "synthetic_only",
+      "required_inputs": [
+        "Supply verified Dynamic Vault, LP mint, and Clock from one Bank.",
+        "Pool and liquidity-position returns need separate layouts."
+      ]
+    },
+    {
+      "id": "hylo",
+      "name": "Hylo",
+      "parser_status": "implemented",
+      "ledger_support": [],
+      "account_support": [
+        "hyUSD per eHYUSD share before withdrawal fees; 1 configured product"
+      ],
+      "live_verification": "synthetic_only",
+      "required_inputs": [
+        "Supply verified pool config, Earn Pool, share mint, and Clock from one Bank.",
+        "A USD value also needs a hyUSD price."
+      ]
+    },
+    {
+      "id": "reflect",
+      "name": "Reflect",
+      "parser_status": "planned",
+      "ledger_support": [],
+      "account_support": [],
+      "live_verification": "not_verified",
+      "required_inputs": [
+        "Read tranche shares and allocation state. Track the value and provenance of the underlying assets separately."
+      ]
+    },
+    {
+      "id": "voltr",
+      "name": "Voltr",
+      "parser_status": "planned",
+      "ledger_support": [],
+      "account_support": [],
+      "live_verification": "not_verified",
+      "required_inputs": [
+        "Assess each strategy's holdings, price inputs, fees, and share ledger. Where a keeper publishes position value, retain that source in the result."
+      ]
+    },
+    {
+      "id": "manifest",
+      "name": "Manifest",
+      "parser_status": "planned",
+      "ledger_support": [],
+      "account_support": [],
+      "live_verification": "not_verified",
+      "required_inputs": [
+        "Assess each strategy's holdings, price inputs, fees, and share ledger. Where a keeper publishes position value, retain that source in the result."
+      ]
+    },
+    {
+      "id": "gmx-solana",
+      "name": "GMX Solana",
+      "parser_status": "planned",
+      "ledger_support": [],
+      "account_support": [],
+      "live_verification": "not_verified",
+      "required_inputs": [
+        "Assess each strategy's holdings, price inputs, fees, and share ledger. Where a keeper publishes position value, retain that source in the result."
+      ]
+    },
+    {
+      "id": "diversifi",
+      "name": "DiversiFi",
+      "parser_status": "planned",
+      "ledger_support": [],
+      "account_support": [],
+      "live_verification": "not_verified",
+      "required_inputs": [
+        "Assess each strategy's holdings, price inputs, fees, and share ledger. Where a keeper publishes position value, retain that source in the result."
+      ]
+    },
+    {
+      "id": "piggy-bank",
+      "name": "Piggy Bank",
+      "parser_status": "planned",
+      "ledger_support": [],
+      "account_support": [],
+      "live_verification": "not_verified",
+      "required_inputs": [
+        "Assess each strategy's holdings, price inputs, fees, and share ledger. Where a keeper publishes position value, retain that source in the result."
+      ]
+    },
+    {
+      "id": "perena",
+      "name": "Perena",
+      "parser_status": "external",
+      "ledger_support": [],
+      "account_support": [],
+      "live_verification": "not_verified",
+      "required_inputs": [
+        "Index the published price and tranche shares. Preserve the source and time of the external yield reports that affect the price."
+      ]
+    },
+    {
+      "id": "lulo",
+      "name": "Lulo",
+      "parser_status": "external",
+      "ledger_support": [],
+      "account_support": [],
+      "live_verification": "not_verified",
+      "required_inputs": [
+        "Track the valuation of the underlying positions on Solana and Ethereum."
+      ]
+    },
+    {
+      "id": "neutral-trade",
+      "name": "Neutral Trade",
+      "parser_status": "external",
+      "ledger_support": [],
+      "account_support": [],
+      "live_verification": "not_verified",
+      "required_inputs": [
+        "Track the published share value and its update source. Obtain external strategy values for independent verification."
+      ]
+    },
+    {
+      "id": "synatra",
+      "name": "Synatra",
+      "parser_status": "external",
+      "ledger_support": [],
+      "account_support": [],
+      "live_verification": "not_verified",
+      "required_inputs": [
+        "Track the published share value and its update source. Obtain external strategy values for independent verification."
+      ]
+    },
+    {
+      "id": "onre",
+      "name": "OnRe",
+      "parser_status": "external",
+      "ledger_support": [],
+      "account_support": [],
+      "live_verification": "not_verified",
+      "required_inputs": [
+        "Check the token's redemption formula, issuer marks, distributions, and publication cadence. OnRe's contract supplies its redemption price. The insurance portfolio uses separate valuation inputs."
+      ]
+    },
+    {
+      "id": "figure",
+      "name": "Figure",
+      "parser_status": "external",
+      "ledger_support": [],
+      "account_support": [],
+      "live_verification": "not_verified",
+      "required_inputs": [
+        "Check the token's redemption formula, issuer marks, distributions, and publication cadence. OnRe's contract supplies its redemption price. The insurance portfolio uses separate valuation inputs."
+      ]
+    },
+    {
+      "id": "huma",
+      "name": "Huma",
+      "parser_status": "external",
+      "ledger_support": [],
+      "account_support": [],
+      "live_verification": "not_verified",
+      "required_inputs": [
+        "Check the token's redemption formula, issuer marks, distributions, and publication cadence. OnRe's contract supplies its redemption price. The insurance portfolio uses separate valuation inputs."
+      ]
+    },
+    {
+      "id": "dawn",
+      "name": "DAWN",
+      "parser_status": "external",
+      "ledger_support": [],
+      "account_support": [],
+      "live_verification": "not_verified",
+      "required_inputs": [
+        "Check the token's redemption formula, issuer marks, distributions, and publication cadence. OnRe's contract supplies its redemption price. The insurance portfolio uses separate valuation inputs."
+      ]
+    },
+    {
+      "id": "midas",
+      "name": "Midas",
+      "parser_status": "external",
+      "ledger_support": [],
+      "account_support": [],
+      "live_verification": "not_verified",
+      "required_inputs": [
+        "Check the token's redemption formula, issuer marks, distributions, and publication cadence. OnRe's contract supplies its redemption price. The insurance portfolio uses separate valuation inputs."
+      ]
+    },
+    {
+      "id": "obligate",
+      "name": "Obligate",
+      "parser_status": "external",
+      "ledger_support": [],
+      "account_support": [],
+      "live_verification": "not_verified",
+      "required_inputs": [
+        "Check the token's redemption formula, issuer marks, distributions, and publication cadence. OnRe's contract supplies its redemption price. The insurance portfolio uses separate valuation inputs."
+      ]
+    },
+    {
+      "id": "solayer",
+      "name": "Solayer",
+      "parser_status": "external",
+      "ledger_support": [],
+      "account_support": [],
+      "live_verification": "not_verified",
+      "required_inputs": [
+        "Check the token's redemption formula, issuer marks, distributions, and publication cadence. OnRe's contract supplies its redemption price. The insurance portfolio uses separate valuation inputs."
+      ]
+    },
+    {
+      "id": "ethena",
+      "name": "Ethena",
+      "parser_status": "external",
+      "ledger_support": [],
+      "account_support": [],
+      "live_verification": "not_verified",
+      "required_inputs": [
+        "Identify the source chain and valuation authority for each asset. Preserve source-chain exchange rates, bridge identity, and issuer marks where applicable."
+      ]
+    },
+    {
+      "id": "apyx",
+      "name": "Apyx",
+      "parser_status": "external",
+      "ledger_support": [],
+      "account_support": [],
+      "live_verification": "not_verified",
+      "required_inputs": [
+        "Identify the source chain and valuation authority for each asset. Preserve source-chain exchange rates, bridge identity, and issuer marks where applicable."
+      ]
+    },
+    {
+      "id": "nest",
+      "name": "Nest",
+      "parser_status": "external",
+      "ledger_support": [],
+      "account_support": [],
+      "live_verification": "not_verified",
+      "required_inputs": [
+        "Identify the source chain and valuation authority for each asset. Preserve source-chain exchange rates, bridge identity, and issuer marks where applicable."
+      ]
+    },
+    {
+      "id": "re",
+      "name": "Re",
+      "parser_status": "external",
+      "ledger_support": [],
+      "account_support": [],
+      "live_verification": "not_verified",
+      "required_inputs": [
+        "Identify the source chain and valuation authority for each asset. Preserve source-chain exchange rates, bridge identity, and issuer marks where applicable."
+      ]
+    },
+    {
+      "id": "usd-ai",
+      "name": "USD.AI",
+      "parser_status": "external",
+      "ledger_support": [],
+      "account_support": [],
+      "live_verification": "not_verified",
+      "required_inputs": [
+        "Identify the source chain and valuation authority for each asset. Preserve source-chain exchange rates, bridge identity, and issuer marks where applicable."
+      ]
+    },
+    {
+      "id": "maple",
+      "name": "Maple",
+      "parser_status": "external",
+      "ledger_support": [],
+      "account_support": [],
+      "live_verification": "not_verified",
+      "required_inputs": [
+        "Identify the source chain and valuation authority for each asset. Preserve source-chain exchange rates, bridge identity, and issuer marks where applicable."
+      ]
+    },
+    {
+      "id": "centrifuge",
+      "name": "Centrifuge",
+      "parser_status": "external",
+      "ledger_support": [],
+      "account_support": [],
+      "live_verification": "not_verified",
+      "required_inputs": [
+        "Identify the source chain and valuation authority for each asset. Preserve source-chain exchange rates, bridge identity, and issuer marks where applicable."
+      ]
+    },
+    {
+      "id": "ondo",
+      "name": "Ondo",
+      "parser_status": "external",
+      "ledger_support": [],
+      "account_support": [],
+      "live_verification": "not_verified",
+      "required_inputs": [
+        "Identify the source chain and valuation authority for each asset. Preserve source-chain exchange rates, bridge identity, and issuer marks where applicable."
+      ]
+    },
+    {
+      "id": "apollo",
+      "name": "Apollo",
+      "parser_status": "external",
+      "ledger_support": [],
+      "account_support": [],
+      "live_verification": "not_verified",
+      "required_inputs": [
+        "Track the issuer or fund NAV, corporate actions, and distributions for each share class. Solana token balances can identify holdings."
+      ]
+    },
+    {
+      "id": "superstate",
+      "name": "Superstate",
+      "parser_status": "external",
+      "ledger_support": [],
+      "account_support": [],
+      "live_verification": "not_verified",
+      "required_inputs": [
+        "Track the issuer or fund NAV, corporate actions, and distributions for each share class. Solana token balances can identify holdings."
+      ]
+    },
+    {
+      "id": "blackrock",
+      "name": "BlackRock",
+      "parser_status": "external",
+      "ledger_support": [],
+      "account_support": [],
+      "live_verification": "not_verified",
+      "required_inputs": [
+        "Track the issuer or fund NAV, corporate actions, and distributions for each share class. Solana token balances can identify holdings."
+      ]
+    },
+    {
+      "id": "vaneck",
+      "name": "VanEck",
+      "parser_status": "external",
+      "ledger_support": [],
+      "account_support": [],
+      "live_verification": "not_verified",
+      "required_inputs": [
+        "Track the issuer or fund NAV, corporate actions, and distributions for each share class. Solana token balances can identify holdings."
+      ]
+    },
+    {
+      "id": "xstocks",
+      "name": "xStocks",
+      "parser_status": "external",
+      "ledger_support": [],
+      "account_support": [],
+      "live_verification": "not_verified",
+      "required_inputs": [
+        "Track the issuer or fund NAV, corporate actions, and distributions for each share class. Solana token balances can identify holdings."
+      ]
+    },
+    {
+      "id": "solstice",
+      "name": "Solstice",
+      "parser_status": "external",
+      "ledger_support": [],
+      "account_support": [],
+      "live_verification": "not_verified",
+      "required_inputs": [
+        "Check the share-price or distribution contract and its inputs by token. Identify any report that represents positions outside Solana."
+      ]
+    },
+    {
+      "id": "standx",
+      "name": "StandX",
+      "parser_status": "external",
+      "ledger_support": [],
+      "account_support": [],
+      "live_verification": "not_verified",
+      "required_inputs": [
+        "Check the share-price or distribution contract and its inputs by token. Identify any report that represents positions outside Solana."
+      ]
+    },
+    {
+      "id": "unitas",
+      "name": "Unitas",
+      "parser_status": "external",
+      "ledger_support": [],
+      "account_support": [],
+      "live_verification": "not_verified",
+      "required_inputs": [
+        "Check the share-price or distribution contract and its inputs by token. Identify any report that represents positions outside Solana."
+      ]
+    }
+  ]
+}

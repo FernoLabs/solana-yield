@@ -1,0 +1,8 @@
+[workspace]
+resolver = "2"
+members = ["crates/yield-parser", "crates/yield-api", "crates/yield-stream", "crates/blockzilla-decoder"]
+exclude = ["vendor/blockzilla"]
+
+[profile.release]
+lto = "thin"
+strip = true

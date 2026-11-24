@@ -1,0 +1,798 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Solana Yield API",
+    "version": "0.1.0",
+    "description": "Read-only yield observations. Rates preserve their source and method. Collectors require explicit configuration; --serve-only starts without collectors. Blockzilla ledger and account monitor stores are separate from this API in this release."
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:8080",
+      "description": "Default local listener"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Read service and current source status",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The database or bundled document is unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "description": "HTTP 200 means the process and database are accessible. ready is false if any configured source or observation is unavailable. An empty server is not ready."
+      }
+    },
+    "/v1/sources": {
+      "get": {
+        "summary": "List configured source status",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sources"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The database or bundled document is unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/protocols": {
+      "get": {
+        "summary": "List parser coverage and planned protocol work",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Protocols"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The database or bundled document is unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "description": "This bundled registry describes implementation and recorded verification. It does not prove current source availability; use /v1/coverage for current collected data."
+      }
+    },
+    "/v1/yields": {
+      "get": {
+        "summary": "Read the latest observations",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/YieldPage"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The database or bundled document is unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or unknown query parameter. Validation errors use a JSON error; query decoding errors may be plain text."
+          }
+        },
+        "parameters": [
+          {
+            "name": "origin",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "onchain",
+                "api"
+              ]
+            },
+            "description": "Restrict observations by source origin."
+          },
+          {
+            "name": "protocol",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            },
+            "description": "Case-insensitive match against the protocol lineage. Reviewed Kamino and Jupiter aliases are normalized. Filtering occurs before pagination."
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000000,
+              "default": 0
+            },
+            "description": "Number of matching observations to skip."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000,
+              "default": 200
+            },
+            "description": "Maximum number of returned observations."
+          }
+        ],
+        "description": "Rows are ordered by source_id and id. total counts rows after all filters. Missing or stale values remain as rows with no rates and an unavailable_reason. Separate sources can report the same position."
+      }
+    },
+    "/v1/history": {
+      "get": {
+        "summary": "Read history for one source and position",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/History"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The database or bundled document is unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or unknown query parameter. Validation errors use a JSON error; query decoding errors may be plain text."
+          }
+        },
+        "parameters": [
+          {
+            "name": "source_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80
+            },
+            "description": "Exact source ID."
+          },
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            },
+            "description": "Exact observation ID."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000,
+              "default": 100
+            },
+            "description": "Maximum number of stored observations."
+          }
+        ],
+        "description": "Newest stored observations first. Historical rates retain their original source time; they are not a current-rate claim."
+      }
+    },
+    "/v1/coverage": {
+      "get": {
+        "summary": "Read coverage of current collected data",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Coverage"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The database or bundled document is unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "description": "Counts reflect the database, configured source status, and freshness policy. They are not the protocol registry coverage."
+      }
+    },
+    "/openapi.json": {
+      "get": {
+        "summary": "Read this OpenAPI document",
+        "responses": {
+          "200": {
+            "description": "OpenAPI 3.1 document",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The bundled document is invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Rate": {
+        "type": "object",
+        "properties": {
+          "component": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "apr",
+              "apy"
+            ]
+          },
+          "value": {
+            "type": "number",
+            "description": "Annual fraction; 0.05 means 5 percent. Components are not summed."
+          }
+        },
+        "required": [
+          "component",
+          "kind",
+          "value"
+        ]
+      },
+      "Evidence": {
+        "type": "object",
+        "properties": {
+          "origin": {
+            "type": "string",
+            "enum": [
+              "onchain",
+              "api"
+            ]
+          },
+          "transport": {
+            "type": "string"
+          },
+          "genesis_hash": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "commitment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "context_slot": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "format": "int64",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "accounts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "origin",
+          "transport",
+          "genesis_hash",
+          "commitment",
+          "context_slot",
+          "accounts"
+        ]
+      },
+      "Observation": {
+        "type": "object",
+        "properties": {
+          "schema_version": {
+            "const": 1
+          },
+          "id": {
+            "type": "string"
+          },
+          "source_id": {
+            "type": "string"
+          },
+          "protocol": {
+            "type": "string"
+          },
+          "protocols": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "market": {
+            "type": "string"
+          },
+          "asset": {
+            "type": "string"
+          },
+          "denomination": {
+            "type": "string"
+          },
+          "method": {
+            "type": "string"
+          },
+          "rates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Rate"
+            }
+          },
+          "window_seconds": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "format": "int64",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "observed_at_ms": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "format": "int64",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "collected_at_ms": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "unavailable_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/Evidence"
+          }
+        },
+        "required": [
+          "schema_version",
+          "id",
+          "source_id",
+          "protocol",
+          "protocols",
+          "market",
+          "asset",
+          "denomination",
+          "method",
+          "rates",
+          "window_seconds",
+          "observed_at_ms",
+          "collected_at_ms",
+          "unavailable_reason",
+          "evidence"
+        ]
+      },
+      "YieldPage": {
+        "type": "object",
+        "properties": {
+          "schema_version": {
+            "const": 1
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "offset": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "observations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Observation"
+            }
+          }
+        },
+        "required": [
+          "schema_version",
+          "total",
+          "offset",
+          "observations"
+        ]
+      },
+      "History": {
+        "type": "object",
+        "properties": {
+          "schema_version": {
+            "const": 1
+          },
+          "source_id": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "observations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Observation"
+            }
+          }
+        },
+        "required": [
+          "schema_version",
+          "source_id",
+          "id",
+          "observations"
+        ]
+      },
+      "Source": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "adapter": {
+            "type": "string"
+          },
+          "origin": {
+            "type": "string",
+            "enum": [
+              "onchain",
+              "api"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "ok",
+              "unavailable",
+              "error"
+            ]
+          },
+          "last_attempt_ms": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "format": "int64",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "last_success_ms": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "format": "int64",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "adapter",
+          "origin",
+          "status",
+          "last_attempt_ms",
+          "last_success_ms",
+          "error"
+        ]
+      },
+      "Sources": {
+        "type": "object",
+        "properties": {
+          "sources": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Source"
+            }
+          }
+        },
+        "required": [
+          "sources"
+        ]
+      },
+      "Coverage": {
+        "type": "object",
+        "properties": {
+          "ready": {
+            "type": "boolean"
+          },
+          "configured_sources": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "positions": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "observations": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "onchain": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "api": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "available": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "unavailable": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "protocols": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "ready",
+          "configured_sources",
+          "positions",
+          "observations",
+          "onchain",
+          "api",
+          "available",
+          "unavailable",
+          "protocols"
+        ]
+      },
+      "Health": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "ready": {
+            "type": "boolean"
+          },
+          "schema_version": {
+            "const": 1
+          },
+          "coverage": {
+            "$ref": "#/components/schemas/Coverage"
+          }
+        },
+        "required": [
+          "ok",
+          "ready",
+          "schema_version",
+          "coverage"
+        ]
+      },
+      "Protocol": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "parser_status": {
+            "type": "string",
+            "enum": [
+              "implemented",
+              "planned",
+              "external"
+            ]
+          },
+          "ledger_support": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "account_support": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "live_verification": {
+            "type": "string",
+            "enum": [
+              "historical_ledger",
+              "synthetic_only",
+              "not_verified",
+              "fixture_only"
+            ]
+          },
+          "required_inputs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "parser_status",
+          "ledger_support",
+          "account_support",
+          "live_verification",
+          "required_inputs"
+        ]
+      },
+      "Protocols": {
+        "type": "object",
+        "properties": {
+          "schema_version": {
+            "const": 1
+          },
+          "protocols": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Protocol"
+            }
+          }
+        },
+        "required": [
+          "schema_version",
+          "protocols"
+        ]
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "error"
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,33 @@
+[package]
+name = "blockzilla-compact"
+version = "0.2.0"
+edition = "2024"
+rust-version = "1.98"
+license = "MIT"
+repository = "https://github.com/FernoLabs/blockzilla"
+publish = ["crates-io"]
+autobins = false
+description = "Compact record model: blocks, transactions, metadata and logs"
+
+[features]
+default = ["known-program-logs", "native-registry"]
+native-registry = ["blockzilla-registry/native-registry"]
+portable-registry = ["blockzilla-registry/portable-registry"]
+known-program-logs = ["blockzilla-program-logs/known-program-logs"]
+
+[dependencies]
+blockzilla-primitives = { path = "../../blockzilla-primitives", version = "0.2.0" }
+blockzilla-registry = { path = "../blockzilla-registry", version = "0.2.0", default-features = false }
+blockzilla-program-logs = { path = "../../parser/blockzilla-program-logs", default-features = false, version = "0.2.0" }
+anyhow = "1.0.104"
+data-encoding = "2.11.1"
+heapless = { version = "0.9.3", features = ["serde"] }
+prost = "0.14.4"
+serde = { version = "1.0.229", features = ["derive"] }
+solana-pubkey = "4.2.1"
+wincode = { version = "=0.6.1", features = ["derive"] }
+of-car-reader = { path = "../../old-faithful/of-car-reader", version = "0.2.1", default-features = false }
+blockzilla-log-parser = { path = "../../parser/blockzilla-log-parser", version = "0.2.0" }
+
+[lints.rust]
+unexpected_cfgs = "deny"

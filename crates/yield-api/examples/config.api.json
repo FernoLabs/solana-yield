@@ -1,0 +1,20 @@
+{
+  "listen": "127.0.0.1:8080",
+  "database": "./data/yields-api.sqlite",
+  "interval_seconds": 300,
+  "max_age_seconds": 3600,
+  "allow_api_sources": true,
+  "rpc_url_env": null,
+  "genesis_hash": "5eykt4UsFv8P8NJdTREpY1vzqKqZKvdpKuc147dw2N9d",
+  "sources": [
+    {
+      "adapter": "defillama",
+      "id": "defillama-solana"
+    },
+    {
+      "adapter": "catalog_api",
+      "id": "external-catalog",
+      "url_env": "YIELD_CATALOG_URL"
+    }
+  ]
+}

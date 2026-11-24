@@ -1,0 +1,8 @@
+/target/
+/data/
+/config.local.json
+/source.local.json
+*.frame
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal

@@ -1,0 +1,11 @@
+.git
+target
+data
+**/target
+**/*.sqlite*
+**/*.db*
+**/*.key
+**/*.pem
+.env*
+**/config.local.json
+**/__pycache__
