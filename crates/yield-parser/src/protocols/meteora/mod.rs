@@ -1,5 +1,8 @@
 //! Unlocked Dynamic Vault assets per share at the same-Bank Clock.
 
+mod adapter;
+pub use adapter::Adapter;
+
 use super::common::{mint_supply, share_value, u64_at};
 use crate::{body, key, live::Measure, Account, ParseError};
 

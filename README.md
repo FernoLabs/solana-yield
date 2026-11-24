@@ -18,6 +18,10 @@ still required for each one. Current live yield coverage is not yet proved.
 | [Account observer](docs/account-feed.md) | Read verified account-feed frames with a five-second Bank observation limit and zero RPC |
 | [Protocol registry](docs/coverage.md) | Implemented layouts, test evidence, missing inputs, and candidate protocols |
 
+New account parsers use a [shared adapter contract](docs/adding-a-protocol.md).
+It provides named account requirements, a checked Bank context, and common
+measurement checks. A runnable external-adapter example is included.
+
 The parser performs no network requests. The Blockzilla stream and account
 observer send no transactions and make no RPC requests. Backend RPC and
 external API collectors are separate, explicit options. The default quickstart
@@ -98,6 +102,8 @@ cargo clippy --workspace --all-targets --locked --no-deps -- -D warnings
 ```
 
 Read [CONTRIBUTING.md](CONTRIBUTING.md) to add a parser, source adapter, or test.
+The [withdrawal-check design](docs/redemption-validation.md) explains the planned
+optional execution checks and keeps them separate from measured share values.
 Read [SECURITY.md](SECURITY.md) before reporting a possible vulnerability.
 The code uses the [MIT license](LICENSE). Included dependencies retain their
 own license files and source records.

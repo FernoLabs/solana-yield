@@ -83,3 +83,15 @@ measurements through the reorganized parser. The RPC-adapter startup check
 used a synthetic loopback server; it was not a live RPC call. No live provider
 capture or transaction submission was performed. A Docker image build was
 not run because the local Docker daemon was unavailable.
+
+## Shared account-adapter checks
+
+The common account-adapter change passed 229 workspace Rust tests and seven
+Python checks. The parser accounts for 53 Rust tests, including an external
+adapter contract and watch-list configuration checks. The library also builds
+and tests without default features. Clippy and the runnable custom-adapter
+example pass.
+
+All 29 existing product outputs match the preceding release. The common
+adapter requirements produce the same 33 watched keys, including Clock.
+These are offline compatibility checks; they do not establish live coverage.

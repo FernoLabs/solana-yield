@@ -1,5 +1,8 @@
 //! Posted simple annual rates from Elemental deposit pools.
 
+mod adapter;
+pub use adapter::Adapter;
+
 use super::common::u64_at;
 use crate::{body, key, live::Measure, Account, ParseError};
 

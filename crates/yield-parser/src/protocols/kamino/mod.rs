@@ -1,5 +1,8 @@
 //! Stored Kamino Lending Reserve v1 receipt value.
 
+mod adapter;
+pub use adapter::Adapter;
+
 pub mod ledger;
 
 use crate::{body, key, Account, ParseError, ShareValue};

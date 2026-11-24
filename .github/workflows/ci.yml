@@ -17,6 +17,8 @@ jobs:
         run: rustup toolchain install 1.99.0 --profile minimal --component rustfmt,clippy
       - run: cargo fmt --package yield-parser --package yield-indexer --package yield-stream --package blockzilla-decoder -- --check
       - run: cargo test --workspace --locked
+      - run: cargo test --locked -p yield-parser --no-default-features
+      - run: cargo run --locked -p yield-parser --example custom_adapter
       - run: cargo clippy --workspace --all-targets --locked --no-deps -- -D warnings
       - run: cargo build --locked -p yield-indexer
       - run: python3 scripts/smoke-server.py --binary target/debug/yield-indexer

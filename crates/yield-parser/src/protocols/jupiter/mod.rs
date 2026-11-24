@@ -5,6 +5,9 @@
 //! Conversion scale and update rules:
 //! <https://github.com/Instadapp/fluid-solana-programs/blob/626b177f235224bc5d074d39439cd2558f542886/programs/lending/src/utils/helpers.rs>.
 
+mod adapter;
+pub use adapter::Adapter;
+
 pub mod ledger;
 
 use crate::{body, key, Account, ParseError, ShareValue};

@@ -2,12 +2,34 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use base64::{engine::general_purpose::STANDARD, Engine};
 use serde::{Deserialize, Serialize};
-use yield_parser::{live, live_project0, live_save, live_vaults, Account, ParseError};
+use yield_parser::{
+    adapter::{self, AccountProvider, ObservationContext, ProtocolAdapter},
+    protocols::{elemental, hylo, jupiter, kamino, meteora, project0, save},
+    Account, ParseError,
+};
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct Input {
     live_bank: Bank,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct WatchInput {
+    watch_list: WatchList,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct WatchList {
+    markets: Vec<Market>,
+}
+
+#[derive(Serialize)]
+pub(crate) struct WatchDescription {
+    schema_version: u8,
+    keys: Vec<String>,
 }
 
 #[derive(Deserialize)]
@@ -36,6 +58,20 @@ struct Record {
     deny_unknown_fields
 )]
 enum Venue {
+    #[serde(alias = "kamino")]
+    KaminoReserve {
+        reserve: String,
+        lending_market: String,
+        asset_mint: String,
+        share_mint: String,
+    },
+    #[serde(alias = "jupiter")]
+    JupiterEarn {
+        lending: String,
+        liquidity_reserve: String,
+        asset_mint: String,
+        share_mint: String,
+    },
     Save {
         reserve: String,
         lending_market: String,
@@ -61,12 +97,54 @@ enum Venue {
         asset_mint: String,
     },
 }
-
 #[derive(Deserialize)]
 struct Market {
     id: String,
     #[serde(flatten)]
     venue: Venue,
+}
+
+fn validate_markets(markets: &[Market]) -> Result<(), &'static str> {
+    if markets.is_empty() || markets.len() > 100 {
+        return Err("market list must contain 1 to 100 entries");
+    }
+    let mut ids = BTreeSet::new();
+    for market in markets {
+        if market.id.trim().is_empty()
+            || market.id.len() > 160
+            || market.id.chars().any(char::is_control)
+            || !ids.insert(&market.id)
+        {
+            return Err("invalid or duplicate market ID");
+        }
+    }
+    Ok(())
+}
+
+/// Describe the accounts needed by the same adapters used for Bank parsing.
+/// This command reads no account bytes and performs no network request.
+pub(crate) fn describe(input: &WatchInput) -> Result<WatchDescription, Box<dyn std::error::Error>> {
+    validate_markets(&input.watch_list.markets)?;
+    let mut keys = BTreeSet::from([yield_parser::live::CLOCK.to_owned()]);
+    for market in &input.watch_list.markets {
+        let protocol = market.venue.adapter();
+        for account in protocol.required_accounts() {
+            let mut decoded = [0_u8; 32];
+            if !(32..=44).contains(&account.address.len())
+                || bs58::decode(account.address).onto(&mut decoded) != Ok(decoded.len())
+            {
+                return Err("adapter returned an invalid account public key".into());
+            }
+            keys.insert(account.address.to_owned());
+        }
+    }
+    if keys.len() > adapter::MAX_ACCOUNTS {
+        return Err("watch list exceeds the account limit".into());
+    }
+    Ok(WatchDescription {
+        schema_version: 1,
+        keys: keys.into_iter().collect(),
+    })
 }
 
 #[derive(Serialize)]
@@ -94,8 +172,8 @@ struct Value {
     updated_unix_seconds: Option<u64>,
 }
 
-impl From<live::Measure> for Value {
-    fn from(value: live::Measure) -> Self {
+impl From<yield_parser::live::Measure> for Value {
+    fn from(value: yield_parser::live::Measure) -> Self {
         Self {
             kind: value.kind,
             numerator: value.numerator.to_string(),
@@ -109,6 +187,26 @@ impl From<live::Measure> for Value {
 struct Decoded<'a> {
     record: &'a Record,
     data: Vec<u8>,
+}
+
+struct BankAccounts<'a> {
+    records: BTreeMap<&'a str, Decoded<'a>>,
+}
+
+impl AccountProvider for BankAccounts<'_> {
+    fn account(&self, key: &str) -> Result<Account<'_>, ParseError> {
+        let (key, value) = self
+            .records
+            .get_key_value(key)
+            .ok_or(ParseError::InvalidAccount)?;
+        Ok(Account {
+            address: key,
+            owner: &value.record.owner,
+            executable: value.record.executable,
+            lamports: value.record.lamports,
+            data: &value.data,
+        })
+    }
 }
 
 pub(crate) fn parse(input: &Input) -> Result<Batch<'_>, Box<dyn std::error::Error>> {
@@ -130,47 +228,23 @@ pub(crate) fn parse(input: &Input) -> Result<Batch<'_>, Box<dyn std::error::Erro
             records.insert(key.as_str(), Decoded { record, data });
         }
     }
-    let get = |key: &str| -> Result<Account<'_>, ParseError> {
-        let (key, value) = records
-            .get_key_value(key)
-            .ok_or(ParseError::InvalidAccount)?;
-        Ok(Account {
-            address: key,
-            owner: &value.record.owner,
-            executable: value.record.executable,
-            lamports: value.record.lamports,
-            data: &value.data,
-        })
-    };
-    let time = live::clock_unix_seconds(&get(live::CLOCK)?, bank.slot)?;
+    let accounts = BankAccounts { records };
+    let context = ObservationContext::new(bank.slot, &accounts)?;
     let mut ids = BTreeSet::new();
     let mut rows = Vec::new();
     for market in &bank.markets {
         if market.id.is_empty() || market.id.len() > 160 || !ids.insert(&market.id) {
             return Err("invalid or duplicate market ID".into());
         }
-        let (venue, result) = market.venue.observe(&get, time);
-        let result = result.and_then(|values| {
-            if values.is_empty()
-                || values.iter().any(|value| {
-                    value.denominator == 0
-                        || value.updated_slot.is_some_and(|slot| slot > bank.slot)
-                        || value
-                            .updated_unix_seconds
-                            .is_some_and(|updated| updated > time)
-                })
-            {
-                return Err(ParseError::InvalidValue);
-            }
-            Ok(values)
-        });
+        let protocol = market.venue.adapter();
+        let result = adapter::observe(protocol.as_ref(), &context);
         let (values, unavailable) = match result {
             Ok(values) => (values.into_iter().map(Value::from).collect(), None),
             Err(error) => (Vec::new(), Some(error.to_string())),
         };
         rows.push(Row {
             id: &market.id,
-            venue,
+            venue: protocol.protocol(),
             values,
             unavailable,
         });
@@ -178,57 +252,76 @@ pub(crate) fn parse(input: &Input) -> Result<Batch<'_>, Box<dyn std::error::Erro
     Ok(Batch {
         schema_version: 1,
         slot: bank.slot,
-        unix_seconds: time,
+        unix_seconds: context.unix_seconds(),
         rows,
     })
 }
 
 impl Venue {
-    fn observe<'a>(
-        &self,
-        get: &impl Fn(&str) -> Result<Account<'a>, ParseError>,
-        time: u64,
-    ) -> (&'static str, Result<Vec<live::Measure>, ParseError>) {
+    // This is only JSON CLI registration. Library users can supply any adapter.
+    fn adapter(&self) -> Box<dyn ProtocolAdapter + '_> {
         match self {
+            Self::KaminoReserve {
+                reserve,
+                lending_market,
+                asset_mint,
+                share_mint,
+            } => Box::new(kamino::Adapter {
+                reserve,
+                lending_market,
+                asset_mint,
+                share_mint,
+            }),
+            Self::JupiterEarn {
+                lending,
+                liquidity_reserve,
+                asset_mint,
+                share_mint,
+            } => Box::new(jupiter::Adapter {
+                lending,
+                liquidity_reserve,
+                asset_mint,
+                share_mint,
+            }),
             Self::Save {
                 reserve,
                 lending_market,
                 asset_mint,
-            } => (
-                "save",
-                get(reserve)
-                    .and_then(|account| live_save::observe(&account, lending_market, asset_mint)),
-            ),
+            } => Box::new(save::Adapter {
+                reserve,
+                lending_market,
+                asset_mint,
+            }),
             Self::Project0 {
                 bank,
                 group,
                 asset_mint,
-            } => (
-                "project0",
-                get(bank).and_then(|account| live_project0::observe(&account, group, asset_mint)),
-            ),
-            Self::Elemental { pool, asset_mint } => (
-                "elemental",
-                get(pool).and_then(|account| live_vaults::observe_elemental(&account, asset_mint)),
-            ),
+            } => Box::new(project0::Adapter {
+                bank,
+                group,
+                asset_mint,
+            }),
+            Self::Elemental { pool, asset_mint } => {
+                Box::new(elemental::Adapter { pool, asset_mint })
+            }
             Self::Hylo {
                 config,
                 pool,
                 share_mint,
-            } => (
-                "hylo",
-                (|| live_vaults::observe_hylo(&get(config)?, &get(pool)?, &get(share_mint)?))(),
-            ),
+            } => Box::new(hylo::Adapter {
+                config,
+                pool,
+                share_mint,
+            }),
             Self::Meteora {
                 vault,
                 share_mint,
                 asset_mint,
-            } => (
-                "meteora",
-                (|| {
-                    live_vaults::observe_meteora(&get(vault)?, &get(share_mint)?, asset_mint, time)
-                })(),
-            ),
+            } => Box::new(meteora::Adapter {
+                vault,
+                share_mint,
+                asset_mint,
+            }),
         }
     }
 }

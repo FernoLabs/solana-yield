@@ -12,3 +12,8 @@ the main-market USDC Earn pool. The finalized snapshot was at slot 463283500,
 and the account reports an update at Unix time 1793362942. The SHA-256 of
 the bytes is
 `23951a243af8877488481c9923a716dc8fdbb9e72d71f79b39cfc181869438f0`.
+
+`live-watch-keys.json` records the sorted 33 account keys in the original
+29-product Save, Project 0, Elemental, Hylo, and Meteora watch profile. The
+watch-list CLI test compares adapter-derived requirements with this snapshot.
+It is public configuration data, not an account snapshot or live proof.

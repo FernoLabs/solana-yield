@@ -5,6 +5,9 @@
 //! <https://github.com/0dotxyz/marginfi-v2/blob/8665b8d1afc4d39bf7e575a85c663580e35c6314/type-crate/src/types/bank.rs>
 //! <https://github.com/0dotxyz/marginfi-v2/blob/8665b8d1afc4d39bf7e575a85c663580e35c6314/type-crate/src/types/bank_config.rs>
 
+mod adapter;
+pub use adapter::Adapter;
+
 use crate::{body, key, live::Measure, Account, ParseError};
 
 pub const PROGRAM: &str = "MFv2hWf31Z9kbCa1snEPYctwafyhdvnV7FZnsebVacA";

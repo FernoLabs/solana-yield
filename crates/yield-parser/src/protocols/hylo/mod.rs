@@ -1,5 +1,8 @@
 //! Gross hyUSD value per eHYUSD share from same-Bank account data.
 
+mod adapter;
+pub use adapter::Adapter;
+
 use super::common::{mint_supply, share_value, spl_account, u64_at};
 use crate::{body, key, live::Measure, Account, ParseError};
 

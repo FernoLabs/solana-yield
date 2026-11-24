@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 import unittest
 from unittest.mock import patch
+from types import SimpleNamespace
 
 spec = importlib.util.spec_from_file_location(
     "account_feed", Path(__file__).with_name("live-yield-shadow.py")
@@ -80,6 +81,33 @@ class FeedAdmission(unittest.TestCase):
             with patch.object(feed, "now_ms", return_value=105_000):
                 with self.assertRaises(ValueError):
                     feed.check_frame(frame, self.source, self.keys, (self.frame, self.entries))
+
+
+class WatchConfiguration(unittest.TestCase):
+    def test_uses_parser_requirements_without_a_protocol_role_map(self):
+        keys = sorted([feed.CLOCK, feed.MAINNET])
+        markets = [{"id": "custom-market", "kind": "custom"}]
+        result = SimpleNamespace(returncode=0, stdout=json.dumps({"schema_version": 1, "keys": keys}))
+        with patch.object(feed.subprocess, "run", return_value=result) as run:
+            self.assertEqual(feed.watch_keys(Path("parser"), markets), keys)
+        self.assertEqual(json.loads(run.call_args.kwargs["input"]),
+                         {"watch_list": {"markets": markets}})
+
+    def test_rejects_parser_failure_or_invalid_profile(self):
+        profiles = [
+            {"schema_version": 2, "keys": sorted([feed.CLOCK, feed.MAINNET])},
+            {"schema_version": 1, "keys": [feed.MAINNET]},
+            {"schema_version": 1, "keys": [feed.CLOCK, feed.CLOCK]},
+            {"schema_version": 1, "keys": [feed.CLOCK, "not a key"]},
+        ]
+        for profile in profiles:
+            result = SimpleNamespace(returncode=0, stdout=json.dumps(profile))
+            with self.subTest(profile=profile), patch.object(feed.subprocess, "run", return_value=result):
+                with self.assertRaises(ValueError):
+                    feed.watch_keys(Path("parser"), [])
+        with patch.object(feed.subprocess, "run", return_value=SimpleNamespace(returncode=1)):
+            with self.assertRaisesRegex(ValueError, "configuration"):
+                feed.watch_keys(Path("parser"), [])
 
 
 if __name__ == "__main__":

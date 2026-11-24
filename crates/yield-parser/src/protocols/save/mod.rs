@@ -3,6 +3,9 @@
 //! The packed v1 layout and net-assets calculation follow the pinned
 //! [mainnet SDK](https://github.com/solendprotocol/solana-program-library/blob/d04ce00bbf4356c4fd32b3be38eb9760b696bb3e/token-lending/sdk/src/state/reserve.rs).
 
+mod adapter;
+pub use adapter::Adapter;
+
 use crate::{key, live::Measure, Account, ParseError};
 
 pub const PROGRAM: &str = "So1endDq2YkqhipRh3WViPa8hdiSpxWy6z3Z6tMCpAo";

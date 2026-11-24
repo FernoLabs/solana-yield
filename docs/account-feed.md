@@ -34,8 +34,11 @@ The public watch lists are:
 - `crates/yield-parser/fixtures/live-vaults.json`: 8 Elemental pools, 1 Hylo
   Earn Pool, and 1 Meteora Dynamic Vault.
 
-Together they require 33 account keys, including Clock. The account observer
-does not yet include Kamino or Jupiter account batches.
+Together they require 33 account keys, including Clock. The observer asks the
+parser for the read-key profile with `watch_list`; it has no separate protocol
+role map. Kamino and Jupiter configurations can use the same batch path, but
+the public 29-product lists above have not been expanded. New configurations
+still need verified account identities and live acceptance tests.
 
 ## Run
 

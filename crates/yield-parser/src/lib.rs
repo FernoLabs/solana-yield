@@ -1,6 +1,7 @@
 //! Parse stored Solana account values. The caller supplies the account bytes
 //! and verifies the chain, bank, and time from which they came.
 
+pub mod adapter;
 pub mod protocols;
 
 // Keep the original public imports valid for existing collectors.

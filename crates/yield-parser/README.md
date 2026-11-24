@@ -91,9 +91,56 @@ A block range can have gaps in measurements even when every block is present.
 ## Use as a library
 
 Build with `--no-default-features` to use the library without the CLI
-dependencies. Call `kamino::share_value` or `jupiter::share_value` with an
-`Account` from a verified snapshot and the expected public keys. Enable the
-`ledger` feature to parse a transaction with `ledger::parse_transaction`.
+dependencies. The shared account interface is in [`adapter`](src/adapter.rs):
+
+1. Supply an immutable `AccountProvider` from one externally verified Bank.
+   `AccountSet::new` wraps a bounded slice of account records.
+2. Create `ObservationContext::new` with its slot. This validates the Clock
+   account and keeps the Bank time separate from protocol update times.
+3. Pass a `ProtocolAdapter` to `adapter::observe`. The runner checks the named
+   account requirements, prevents undeclared account reads, and validates the
+   returned exact measurements and update fields.
+
+Each protocol folder exposes an `Adapter` with the keys required by its
+existing reader. Library users can implement the same trait outside this
+crate without editing a central protocol enum. A new CLI JSON kind needs a
+separate registration in `live_batch.rs`.
+
+The runner preserves valid zero values and absent update times. Protocol code
+still verifies the owner, layout, mints, fees, and arithmetic. The caller still
+verifies source identity, Bank provenance, account integrity, and observation
+age; Clock matching alone does not prove that all supplied bytes share a Bank.
+
+The [contributor example](../../docs/adding-a-protocol.md) shows the contract.
+The original `kamino::share_value` and `jupiter::share_value` functions remain
+available for direct account reads. Enable the `ledger` feature to parse a
+transaction with `ledger::parse_transaction`; ledger parsing remains a
+separate interface and has not changed.
+
+## Describe an account watch list
+
+Pass the same market configurations to the pure watch-list mode before
+starting an account feed. For example:
+
+```json
+{"watch_list":{"markets":[{"id":"save-usdt","kind":"save","accounts":{"reserve":"8K9WC8xoh2rtQNY7iEGXtPvfbDCi563SdWhCAhuMP2xE","lending_market":"4UpD2fh7xH3VP9QQaXtsS1YY3bxzWhtfpks7FatyKvdY","asset_mint":"Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB"}}]}}
+```
+
+The result contains `schema_version: 1` and `keys`, a sorted list of unique
+account addresses. Clock is always included. Every other key comes from the
+selected adapter's `required_accounts()` method. The example returns the
+reserve address and Clock; expected market and mint bindings do not need
+account reads for this parser.
+
+The mode accepts 1 to 100 markets with unique, nonblank IDs and at most 100
+unique account keys including Clock. It rejects unknown protocol kinds,
+missing required configuration fields, and malformed read addresses. It
+performs no account, network, or storage reads. This is a read-key profile,
+not proof of the source or the account state. Configuration-only bindings and
+protocol-specific relationships are validated when account bytes are parsed.
+
+The 29-product compatibility profile still returns the same 33 keys. The
+[expected key list](fixtures/live-watch-keys.json) is a regression fixture.
 
 ## Parse live account batches
 
@@ -105,11 +152,19 @@ before it passes the batch to the parser.
 
 | Venue | Products in the watch list | Measurement |
 | --- | ---: | --- |
+| Kamino | Configured separately | Stored reserve assets per collateral share |
+| Jupiter | Configured separately | Stored Earn assets per share |
 | Save | 11 | Stored assets per raw collateral share, net of reserve fees |
 | Project 0 | 8 | Stored asset share value for a native lending bank |
 | Elemental | 8 | Posted simple annual rate |
 | Hylo | 1 | hyUSD per eHYUSD share before withdrawal fees |
 | Meteora Dynamic Vault | 1 | Unlocked USDT per LP share at the Bank's Clock |
+
+The batch uses the same shared runner for all seven protocol adapters. Its
+Kamino and Jupiter JSON kinds are `kamino_reserve` and `jupiter_earn`; they use
+`reserve` or `lending` as the primary account, their expected market/reserve
+binding, and `asset_mint` and `share_mint`. The existing five kinds and their
+output fields are unchanged. The 29-product public watch list is unchanged.
 
 The batch reports exact ratios and per-product unavailability. A stored
 reserve refresh time or slot stays separate from the Bank observation time.

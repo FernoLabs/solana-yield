@@ -29,12 +29,17 @@ Do not infer complete market coverage from one supported layout. Compare a
 small set of stored values with exact-Bank reads. Test stale input, reconnects,
 source changes, and unavailable accounts before extending the watch list.
 
-## 3. Add calculated returns
+## 3. Add calculated returns and withdrawal checks
 
 Store at least two comparable share values over a stated period. Calculate the
 period return from exact ratios before any annualization. Define the treatment
 of fees, deposits, withdrawals, rewards, rebasing, and asset prices for each
 method. Keep posted APR and borrowing cost separate.
+
+The [withdrawal-check design](redemption-validation.md) proposes optional
+local execution to validate net redeemable value where a direct account value
+is unavailable or needs an independent check. It remains separate from the
+parser and requires complete verified execution inputs.
 
 Publish the input observations and calculation method with each result. Avoid
 short-window annualized values until the sampling and rounding error are known.

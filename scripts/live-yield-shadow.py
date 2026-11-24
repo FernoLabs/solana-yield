@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Measure the five yield adapters with a pinned local account feed."""
+"""Measure configured yield adapters with a pinned local account feed."""
 import argparse
 import base64
 from collections import Counter
@@ -20,13 +20,6 @@ BASE58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 MAINNET = "5eykt4UsFv8P8NJdTREpY1vzqKqZKvdpKuc147dw2N9d"
 MAX_AGE_MS = 5_000
 BODY_LIMIT = 1024 * 1024
-WATCH_ROLES = {
-    "save": ("reserve",),
-    "project0": ("bank",),
-    "elemental": ("pool",),
-    "hylo": ("config", "pool", "share_mint"),
-    "meteora": ("vault", "share_mint"),
-}
 
 
 def require(condition, reason):
@@ -123,6 +116,23 @@ def request(origin, token, route, payload=None):
         connection.close()
 
 
+def watch_keys(parser, markets):
+    """Use the same adapter requirements for collection and parsing."""
+    result = subprocess.run([str(parser)], input=encode({"watch_list": {"markets": markets}}),
+                            capture_output=True, timeout=2)
+    require(result.returncode == 0, "yield parser rejected watch configuration")
+    profile = json.loads(result.stdout)
+    require(isinstance(profile, dict), "invalid parser watch profile")
+    keys = profile.get("keys")
+    require(profile.get("schema_version") == 1 and isinstance(keys, list)
+            and 1 < len(keys) <= 100 and all(isinstance(key, str) for key in keys),
+            "invalid parser watch profile")
+    require(CLOCK in keys and keys == sorted(set(keys)), "invalid parser watch keys")
+    for key in keys:
+        key_bytes(key)
+    return keys
+
+
 def parse_bank(parser, frame, entries, markets):
     request_body = {"live_bank": {"slot": frame["bank"]["slot"], "entries": entries, "markets": markets}}
     result = subprocess.run([str(parser)], input=encode(request_body), capture_output=True, timeout=2)
@@ -152,14 +162,9 @@ def run(args):
     require(source["genesis_hash"] == MAINNET, "source pin is not Solana mainnet")
     token = args.token_file.read_text().strip()
     markets = [market for path in args.markets for market in json.loads(path.read_text())]
-    keys = {CLOCK}
-    for market in markets:
-        keys.update(market["accounts"][role] for role in WATCH_ROLES[market["kind"]])
-    keys = sorted(keys)
-    require(len(keys) <= 100 and len({market["id"] for market in markets}) == len(markets),
+    keys = watch_keys(parser, markets)
+    require(len({market["id"] for market in markets}) == len(markets),
             "invalid shadow watch profile")
-    for key in keys:
-        key_bytes(key)
 
     started = time.monotonic()
     window_started = None

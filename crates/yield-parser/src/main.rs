@@ -6,6 +6,8 @@ use serde::{Deserialize, Serialize};
 use yield_parser::{jupiter, kamino, ledger, Account, ShareValue};
 
 mod live_batch;
+#[cfg(test)]
+mod watch_tests;
 
 const MAX_INPUT_BYTES: usize = 2 * 1024 * 1024;
 
@@ -15,6 +17,7 @@ enum Input {
     Account(AccountInput),
     Ledger(LedgerInput),
     Live(live_batch::Input),
+    Watch(live_batch::WatchInput),
 }
 
 #[derive(Deserialize)]
@@ -99,6 +102,7 @@ fn run(mut reader: impl Read, mut writer: impl Write) -> Result<(), Box<dyn std:
             &ledger::parse_transaction(&input.ledger_transaction)?,
         )?,
         Input::Live(input) => serde_json::to_writer(&mut writer, &live_batch::parse(&input)?)?,
+        Input::Watch(input) => serde_json::to_writer(&mut writer, &live_batch::describe(&input)?)?,
     }
     writer.write_all(b"\n")?;
     Ok(())
@@ -203,5 +207,138 @@ mod tests {
         let error = run(bytes.as_slice(), &mut output).unwrap_err();
         assert_eq!(error.to_string(), "input exceeds 2 MiB");
         assert!(output.is_empty());
+    }
+
+    fn live_bank(slot: u64, seconds: i64) -> serde_json::Value {
+        let mut clock = [0_u8; 40];
+        clock[..8].copy_from_slice(&slot.to_le_bytes());
+        clock[32..].copy_from_slice(&seconds.to_le_bytes());
+        serde_json::json!({"live_bank": {
+            "slot": slot,
+            "entries": {yield_parser::live::CLOCK: {
+                "owner": "Sysvar1111111111111111111111111111111111111",
+                "executable": false, "lamports": 1, "rent_epoch": 0,
+                "data_base64": STANDARD.encode(clock)
+            }},
+            "markets": []
+        }})
+    }
+
+    #[test]
+    fn batch_uses_the_shared_adapter_and_keeps_unavailable_rows() {
+        let source: serde_json::Value = serde_json::from_slice(KAMINO_FIXTURE).unwrap();
+        let mut input = live_bank(452_570_160, 1_790_933_433);
+        let address = source["account"]["address"].as_str().unwrap();
+        let mut record = source["account"].clone();
+        record.as_object_mut().unwrap().remove("address");
+        record["rent_epoch"] = serde_json::json!(0);
+        input["live_bank"]["entries"][address] = record;
+        input["live_bank"]["markets"] = serde_json::json!([
+            {"id":"kamino-usdg", "kind":"kamino_reserve", "accounts": {
+                "reserve": address,
+                "lending_market": source["parser"]["lending_market"],
+                "asset_mint": source["parser"]["asset_mint"],
+                "share_mint": source["parser"]["share_mint"]
+            }},
+            {"id":"missing-save", "kind":"save", "accounts": {
+                "reserve":"BJfY2E6TVEQe896kfR1AhhYCECVKfbceGg2ASU2LXdiA",
+                "lending_market":"7XttJ7hp83u5euzT7ybC5zsjdgKA4WPbQHVS27CATAJH",
+                "asset_mint":"EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+            }}
+        ]);
+        let bytes = serde_json::to_vec(&input).unwrap();
+        let mut output = Vec::new();
+        run(bytes.as_slice(), &mut output).unwrap();
+        let output: serde_json::Value = serde_json::from_slice(&output).unwrap();
+        assert_eq!(output["slot"], 452_570_160_u64);
+        assert_eq!(output["rows"][0]["id"], "kamino-usdg");
+        assert_eq!(output["rows"][0]["venue"], "kamino");
+        assert_eq!(output["rows"][0]["unavailable"], serde_json::Value::Null);
+        assert_eq!(
+            output["rows"][0]["values"][0],
+            serde_json::json!({
+                "kind":"stored_assets_per_share",
+                "numerator":"50979573413033157950669539918836",
+                "denominator":"46806536763770400250274189934592",
+                "updated_slot":452_570_160_u64,
+                "updated_unix_seconds":1_790_933_433_u64
+            })
+        );
+        assert_eq!(output["rows"][1]["id"], "missing-save");
+        assert_eq!(output["rows"][1]["venue"], "save");
+        assert_eq!(output["rows"][1]["values"], serde_json::json!([]));
+        assert!(output["rows"][1]["unavailable"].is_string());
+
+        input["live_bank"]["slot"] = serde_json::json!(452_570_161_u64);
+        let bytes = serde_json::to_vec(&input).unwrap();
+        let mut output = Vec::new();
+        assert!(run(bytes.as_slice(), &mut output).is_err());
+        assert!(output.is_empty());
+    }
+
+    #[test]
+    fn jupiter_batch_preserves_its_stored_share_value() {
+        const ADDRESS: &str = "2vVYHYM8VYnvZqQWpTJSj8o8DBf1wM8pVs3bsTgYZiqJ";
+        let mut input = live_bank(463_283_500, 1_793_362_942);
+        input["live_bank"]["entries"][ADDRESS] = serde_json::json!({
+            "owner":"jup3YeL8QhtSx1e253b2FDvsMNC87fDrgQZivbrndc9",
+            "executable":false,"lamports":1,"rent_epoch":0,
+            "data_base64":STANDARD.encode(include_bytes!("../fixtures/jupiter-earn-usdc-lending.bin"))
+        });
+        input["live_bank"]["markets"] = serde_json::json!([
+            {"id":"jupiter-usdc","kind":"jupiter_earn","accounts":{
+                "lending":ADDRESS,
+                "liquidity_reserve":"94vK29npVbyRHXH63rRcTiSr26SFhrQTzbpNJuhQEDu",
+                "asset_mint":"EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+                "share_mint":"9BEcn9aPEmhSPbPQeFGjidRiEKki46fVQDyPpSQXPA2D"
+            }}
+        ]);
+        let bytes = serde_json::to_vec(&input).unwrap();
+        let mut output = Vec::new();
+        run(bytes.as_slice(), &mut output).unwrap();
+        let output: serde_json::Value = serde_json::from_slice(&output).unwrap();
+        assert_eq!(output["rows"][0]["venue"], "jupiter");
+        assert_eq!(output["rows"][0]["unavailable"], serde_json::Value::Null);
+        assert_eq!(output["rows"][0]["values"][0]["numerator"], "1067222452096");
+        assert_eq!(
+            output["rows"][0]["values"][0]["denominator"],
+            "1000000000000"
+        );
+        assert_eq!(
+            output["rows"][0]["values"][0]["updated_slot"],
+            serde_json::Value::Null
+        );
+    }
+
+    #[test]
+    fn existing_elemental_batch_keeps_its_posted_zero_rate_and_output_shape() {
+        const ADDRESS: &str = "5XCP3oD3JAuQyDpfBFFVUxsBxNjPQojpKuL4aVhHsDok";
+        const MINT: &str = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
+        let mut data = [0_u8; 254];
+        data[..8].copy_from_slice(&[241, 154, 109, 4, 17, 177, 109, 188]);
+        data[8..40].copy_from_slice(&bs58::decode(MINT).into_vec().unwrap());
+        data[72..80].copy_from_slice(&1_000_000_u64.to_le_bytes());
+        data[96..104].copy_from_slice(&100_u64.to_le_bytes());
+        let mut input = live_bank(100, 1_000);
+        input["live_bank"]["entries"][ADDRESS] = serde_json::json!({
+            "owner":"ELE5vYY81W7UCpTPs7SyD6Bwm5FwZBntTW8PiGqM5d4A",
+            "executable":false,"lamports":1,"rent_epoch":0,"data_base64":STANDARD.encode(data)
+        });
+        input["live_bank"]["markets"] = serde_json::json!([
+            {"id":"elemental-usdc","kind":"elemental","accounts":{"pool":ADDRESS,"asset_mint":MINT}}
+        ]);
+        let bytes = serde_json::to_vec(&input).unwrap();
+        let mut output = Vec::new();
+        run(bytes.as_slice(), &mut output).unwrap();
+        let output: serde_json::Value = serde_json::from_slice(&output).unwrap();
+        assert_eq!(
+            output["rows"],
+            serde_json::json!([
+                {"id":"elemental-usdc","venue":"elemental","values":[{
+                    "kind":"posted_apr","numerator":"0","denominator":"1000000000",
+                    "updated_slot":null,"updated_unix_seconds":null
+                }],"unavailable":null}
+            ])
+        );
     }
 }

@@ -6,6 +6,11 @@ layout. Scope a change by program, account type, version, and calculation.
 
 ## Add a protocol parser
 
+Use [the shared adapter guide](docs/adding-a-protocol.md) and its runnable
+example. Implement `ProtocolAdapter` and call the common `adapter::observe`
+runner. The library supports external adapters without a central enum change.
+
+
 1. Find the protocol's official source or IDL. Record its exact revision and
    the account layout or event discriminator used by the parser.
 2. Add a module under `crates/yield-parser/src/protocols/<protocol>/`.
@@ -17,7 +22,8 @@ layout. Scope a change by program, account type, version, and calculation.
 5. Add tests for valid data and for the identity, layout, arithmetic, and time
    failures that could change a value. State whether a fixture is synthetic
    or contains public historical account bytes.
-6. Add the module to the public parser API and update
+6. Register the command-line JSON configuration only if needed. Add the module
+   to the public parser API and update
    `config/protocols.json` and `docs/coverage.md`.
 
 A live account adapter must bind the bytes, Clock, and observation time to one
